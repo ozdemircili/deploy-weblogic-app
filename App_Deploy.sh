@@ -1,25 +1,73 @@
 #!/bin/bash
 
+
+#This program is used to deploy Weblogic App version directly from Console
+
+export hostname=`hostname`
+
 echo -n "Please Enter the fullpath to your ear file: "
-read source 
+  read source 
 echo -n "What is your application called?: "
-read appname
+	read appname
 echo -n "Please enter the target name: "
-read target
+	read target
 echo -n "Please enter the weblogic username: "
-read username
+	read username
 echo -n "Please enter the weblogic password: "
-read password
+	read password
+
+
+echo "Killing Managed01"
+
+export ManagedPid=`ps -C java --no-headers -o pid,args | grep Managed01 | awk '{print $1}'`
+echo $ManagedPid
+if [ "$ManagedPid" != "" ]
+then
+   kill -9 $ManagedPid
+fi
+
+sleep 1
+
+
+echo "Starting Managed01"
+
+cd /u01/app/oracle/middleware/user_projects/domains/base_domain/bin
+
+./startManagedWebLogic.sh Managed01 ${hostname}:7001 1>/u01/app/oracle/middleware/user_projects/domains/base_domain/servers/Managed01/logs/Managed01.out 2>&1 &
+
+echo "Waiting for Managed01"
+v=0
+echo -e "
+
+         \|||/
+         (o o)
+ ,~~~ooO~~(_)~~~~~~~~~,
+ |     Waiting        |
+ |    a bit here      |
+ |                    |
+ '~~~~~~~~~~~~~~ooO~~~'
+        |__|__|
+         || ||
+        ooO Ooo
+
+"
+
+sleep 1
+while [ $v -eq 0 ]
+do
+   sleep 1
+   v=`tail --lines=10 /u01/app/oracle/middleware/user_projects/domains/base_domain/servers/Managed01/logs/Managed01.log | grep -c "Server started in RUNNING mode"`
+done
 
 
 echo "Setting Environment"
-find /-name "setWLSEnv.sh" -exec /bin/bash {} \;
-
+cd /u01/app/oracle/middleware/wlserver_10.3/server/bin/
+. setWLSEnv.sh
 
 echo "Undeploying application..."
-java weblogic.Deployer -adminurl http://localhost:7001 -user $USERNAME -password $PASSWORD -undeploy -name $APPNAME -targets $TARGET 
+java weblogic.Deployer -adminurl http://${hostname}:7001 -user $USERNAME -password $PASSWORD -undeploy -name $APPNAME -targets $TARGET 
 
-java weblogic.Deployer -adminurl http://localhost:7001 -user $USERNAME -password $PASSWORD -deploy -name $APPNAME -targets $TARGET  -nowait -source $SOURCE
+java weblogic.Deployer -adminurl http://${hostname}localhost:7001 -user $USERNAME -password $PASSWORD -deploy -name $APPNAME -targets $TARGET  -nowait -source $SOURCE
 
 echo $APPNAME "is deployed successfully"
 
