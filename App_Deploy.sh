@@ -3,6 +3,21 @@
 
 #This program is used to deploy Weblogic App version directly from Console
 
+cat << EOF
+
+This program is used to deploy Weblogic Apps  directly from shell prompt.
+
+Actually very useful as it is painless and very very fast.
+
+Usage: Best way to add the following entry to the .bashrc or .bash_profile of the weblogic user. 
+
+Eg: alias Deploy="/bin/bash /etc/scripts/Deploy.sh"
+
+
+VERSION: 1.7
+
+EOF
+
 export hostname=`hostname`
 
 echo -n "Please Enter the fullpath to your ear file: "
