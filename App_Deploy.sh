@@ -18,6 +18,26 @@ VERSION: 1.7
 
 EOF
 
+#Define color functions
+NORMAL=$(tput sgr0)
+GREEN=$(tput setaf 2; tput bold)
+YELLOW=$(tput setaf 3)
+RED=$(tput setaf 1)
+
+function red() {
+    echo -e "$RED$*$NORMAL"
+}
+
+function green() {
+    echo -e "$GREEN$*$NORMAL"
+}
+
+function yellow() {
+    echo -e "$YELLOW$*$NORMAL"
+}
+
+
+
 export hostname=`hostname`
 
 echo -n "Please Enter the fullpath to your ear file: "
@@ -35,7 +55,9 @@ echo -n "Please enter the weblogic password: "
 echo "Killing Managed01"
 
 export ManagedPid=`ps -C java --no-headers -o pid,args | grep Managed01 | awk '{print $1}'`
+
 echo $ManagedPid
+
 if [ "$ManagedPid" != "" ]
 then
    kill -9 $ManagedPid
@@ -44,13 +66,13 @@ fi
 sleep 1
 
 
-echo "Starting Managed01"
+green "Starting Managed01"
 
 cd /u01/app/oracle/middleware/user_projects/domains/base_domain/bin
 
 ./startManagedWebLogic.sh Managed01 ${hostname}:7001 1>/u01/app/oracle/middleware/user_projects/domains/base_domain/servers/Managed01/logs/Managed01.out 2>&1 &
 
-echo "Waiting for Managed01"
+green "Waiting for Managed01"
 v=0
 echo -e "
 
@@ -75,15 +97,15 @@ do
 done
 
 
-echo "Setting Environment"
+red "Setting Environment"
 cd /u01/app/oracle/middleware/wlserver_10.3/server/bin/
 . setWLSEnv.sh
 
-echo "Undeploying application..."
+green "Undeploying application..."
 java weblogic.Deployer -adminurl http://${hostname}:7001 -user $USERNAME -password $PASSWORD -undeploy -name $APPNAME -targets $TARGET 
 
 java weblogic.Deployer -adminurl http://${hostname}localhost:7001 -user $USERNAME -password $PASSWORD -deploy -name $APPNAME -targets $TARGET  -nowait -source $SOURCE
 
-echo $APPNAME "is deployed successfully"
+green  $APPNAME "is deployed successfully"
 
 exit
